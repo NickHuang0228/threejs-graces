@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <!-- 頁面基本資訊 -->
         <title>Threejs Graces - By Anderson Mancini</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <meta name="description" content="A threejs graces renderer example using threejs boilerplate - by Anderson Mancini">
 
+        <!-- Open Graph 社交媒體分享標籤 -->
         <meta property="og:url" content="https://threejs-graces.tiiny.site/">
         <meta property="og:type" content="website">
         <meta property="og:title" content="Threejs Graces - By Anderson Mancini">
         <meta property="og:description" content="A threejs graces renderer example using threejs boilerplate - by Anderson Mancini">
         <meta property="og:image" content="../static/textures/imageSocial.jpg">
 
+        <!-- Twitter 卡片標籤 -->
         <meta name="twitter:card" content="summary_large_image">
         <meta property="twitter:domain" content="threejs-graces.tiiny.site/">
         <meta property="twitter:url" content="https://threejs-graces.tiiny.site/">
@@ -19,49 +22,66 @@
         <meta name="twitter:description" content="A threejs graces renderer example using threejs boilerplate - by Anderson Mancini">
         <meta name="twitter:image" content="../static/textures/imageSocial.jpg">
 
+        <!-- SEO 標籤 -->
         <meta name="keywords" content="ThreeJS, HTML, CSS, JavaScript">
         <meta name="author" content="Anderson Mancini">
 
+        <!-- 網站圖標 -->
         <link rel="apple-touch-icon" sizes="180x180" href="../static/favicon/apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="../static/favicon/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="../static/favicon/favicon-16x16.png">
         <link rel="manifest" href="../static/favicon/site.webmanifest">
 
+        <!-- Google Fonts 字體預載入 -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Josefin+Sans&family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+        <!-- 載入字體：DM Serif Display, Josefin Sans, Nanum Myeongjo, Orbitron -->
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Josefin+Sans&family=Nanum+Myeongjo&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
         
         <body>
+            <!-- 載入動畫 - 8個旋轉的點 -->
             <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+            <!-- 載入文字覆蓋層 -->
             <div id="loading-text-intro"><p>Loading</p></div>
 
+            <!-- 主容器 - 初始隱藏，載入完成後顯示 -->
             <div class="main-container" style="visibility:hidden;">
-                <nav class="header"><a class="active a"><span>ART</span></a><a class="a"><span>ABOUT</span></a><a class="a"><span>VISIT</span></a><a class="a"><span>SHOP</span></a><a class="a"><span>SEARCH</span></a><div class="cursor"></div></nav>
+                <!-- 導航欄 - 已移除按鈕，保留自定義游標 -->
+                <nav class="header">
+                    <div class="cursor"></div> <!-- 自定義游標 -->
+                </nav>
                 
+                <!-- 首頁區塊 - 簡化版 -->
                 <div class="first">
-                    <h2>The</h2>
-                    <h1>THREE GRACES</h1>
-                    <p>Antonio Canova’s statue The Three Graces is a Neoclassical sculpture, in marble, of the mythological three Charites, daughters of Zeus – identified on some engravings of the statue as, from left to right, Euphrosyne, Aglaea and Thalia – who were said to represent youth/beauty (Thalia), mirth (Euphrosyne), and elegance (Aglaea). The Graces presided over banquets and gatherings, to delight the guests of the gods.</p>
-                </div>
-
-                <div class="section second">
-                    <div class="second-container">
-                        <ul>
-                            <li id="aglaea" class="active">Aglaea</li>
-                            <li id="thalia"><a>Thalia</a></li>
-                            <li id="euphre">Euphre</li>
-                        </ul>
-                        <p id="content">She was venerated as the goddess of beauty, splendor, glory, magnificence, and adornment. She is the youngest of the Charites according to Hesiod. Aglaea is one of three daughters of Zeus and either the Oceanid Eurynome, or of Eunomia, the goddess of good order and lawful conduct.</p>
+                    <h2>敏感的語音，我來守護</h2>
+                    <h1>ILITEK</h1>
+                    
+                    <!-- 信箱輸入區域 -->
+                    <div class="email-section">
+                        <form id="email-form" class="email-form">
+                            <div class="email-input-group">
+                                <input 
+                                    type="email" 
+                                    id="email-input" 
+                                    class="email-input" 
+                                    placeholder="請輸入您的信箱"
+                                    pattern="[a-zA-Z0-9._%+-]+@ilitek\.com$"
+                                    title="請輸入有效的 @ilitek.com 信箱"
+                                    required
+                                >
+                                <button type="submit" class="email-submit">
+                                    <span>登入</span>
+                                </button>
+                            </div>
+                            <div class="email-message" id="email-message"></div>
+                        </form>
                     </div>
-                    <div id="canvas-container-details"></div>
                 </div>
-
-                <div class="third">
-                    <h1>The Making</h1>
-                    <p>Canova's assistants roughly blocked out the marble, leaving Canova to perform the final carving and shape the stone to highlight the Graces soft flesh. This was a trademark of the artist, and the piece shows a strong allegiance to the Neo-Classical movement in sculpture, of which Canova is the prime exponent.<br><br> The three goddesses are shown nude, huddled together, their heads almost touching in what many have referred to as an erotically charged piece. They stand, leaning slightly inward — perhaps discussing a common issue, or simply enjoying their closeness. Their hair-styles are similar, braided atop their heads.</p>
-                </div>
+                
+                <!-- 主 3D 畫布容器 - 背景場景 -->
                 <div id="canvas-container" class="fixed"></div> 
-                <h4 class="footer">Created by Anderson Mancini based on <a href="https://dribbble.com/shots/6767548-The-Three-Graces-Concept" target="_blank">Tom Bogner Design</a>. <a href="https://sketchfab.com/3d-models/3d-printable-the-three-graces-58e0ae19e2984b86883edc41bf43415a" target="_blank">Free model credits</a></h4>
+                
+
             </div>
     </body>
 </html>

@@ -1,14 +1,22 @@
+/* ========================================
+   基礎樣式設置
+   ======================================== */
 body {
 	margin: 0;
 	padding: 0;
-    overscroll-behavior: none;
-    font-family: 'Nanum Myeongjo', serif;
+    overscroll-behavior: none; /* 防止過度滾動 */
+    font-family: 'Nanum Myeongjo', serif; /* 韓文字體 */
     color: #fff;
-    background: #050505;
-    scroll-behavior:smooth;
-    overflow: hidden;
+    background: #050505; /* 深色背景 */
+    overflow: hidden; /* 隱藏溢出內容 */
+    height: 100vh; /* 固定高度為視窗高度 */
+    position: fixed; /* 固定位置，防止滾動 */
+    width: 100%; /* 確保寬度 */
 }
 
+/* ========================================
+   載入動畫樣式
+   ======================================== */
 .lds-roller {
 	width: 80px;
 	height: 80px;
@@ -30,9 +38,10 @@ body {
 	width: 7px;
 	height: 7px;
 	border-radius: 50%;
-	background:#f9f0ec;
+	background:#f9f0ec; /* 載入動畫顏色 */
 	margin: -4px 0 0 -4px;
   }
+  /* 載入動畫的 8 個點，每個有不同的延遲時間 */
   .lds-roller div:nth-child(1) {
 	animation-delay: -0.036s;
   }
@@ -89,6 +98,7 @@ body {
 	top: 56px;
 	left: 12px;
   }
+  /* 載入動畫的旋轉關鍵幀 */
   @keyframes lds-roller {
 	0% {
 	  transform: rotate(0deg);
@@ -98,6 +108,9 @@ body {
 	}
   }
 
+/* ========================================
+   載入文字覆蓋層
+   ======================================== */
 #loading-text-intro{
     z-index: 3;
     position: absolute;
@@ -111,23 +124,36 @@ body {
     font-size: 10px;
     font-weight: 100;
 	color:#f9f0ec;
-	background: radial-gradient(circle at center center,#5d5d5d 0,#090909 58%);
+	background: radial-gradient(circle at center center,#5d5d5d 0,#090909 58%); /* 徑向漸變背景 */
 }
 
 #loading-text-intro.ended{
-	transform: translateY(200%);
+	transform: translateY(200%); /* 載入完成後向下移動 */
 }
 
-nav { width: 100%; padding: 1rem; position: fixed;  z-index: 2;}
+/* ========================================
+   導航欄樣式
+   ======================================== */
+nav { 
+    width: 100%; 
+    padding: 1rem; 
+    position: fixed;  
+    z-index: 2;
+    top: 0;
+    left: 0;
+}
 
 span {
 	display: inline-block;
-	pointer-events: none;
+	pointer-events: none; /* 防止文字干擾點擊事件 */
 	transition: transform 0.1s linear;
 }
 
+/* ========================================
+   自定義游標樣式
+   ======================================== */
 .cursor { 
-	pointer-events: none;
+	pointer-events: none; /* 不阻擋點擊事件 */
 	position: fixed; 
     top: 10px; 
     left: 10px;
@@ -135,36 +161,16 @@ span {
 	background-color: #fff;
 	border-radius: 50%; 
 	transform: translate(-50%, -50%);
-	mix-blend-mode: difference;
+	mix-blend-mode: difference; /* 混合模式，在深色背景上顯示白色 */
 	transition: transform .8s ease, opacity 0.6s ease;
-	z-index: 2;
+	z-index: 999; /* 確保在最上層 */
 }
 
-/* .cursor:has(.a:hover){
-    transform: translate(-50%, -50%) scale(4); opacity: 0.3;
-} */
 
-.a { 
-	display: inline-block; 
-	color: #fff; 
-	padding: 1rem;
-    margin-right: 4rem;
-    letter-spacing: .4em;
-    font-size: .9em;
-	transition: all 0.3s ease, color 0.3s ease;
-}
 
-nav.header .a:hover{
-    cursor: pointer;
-    color: rgb(175, 175, 175); 
-    transform: scale(1.1); 
-
-}
-
-nav.header .a:hover ~ .cursor {
-    transform: translate(-50%, -50%) scale(5); opacity: 0.1; 
-}
-
+/* ========================================
+   Three.js 畫布容器樣式
+   ======================================== */
 .dg.ac {
 	-moz-user-select: none;
 	-webkit-user-select: none;
@@ -173,9 +179,10 @@ nav.header .a:hover ~ .cursor {
 	z-index: 2 !important; /* TODO Solve this in HTML */
 }
 
+/* 主畫布容器 - 背景 3D 場景 */
 #canvas-container{
-    pointer-events: none;
-    position: absolute;
+    pointer-events: none; /* 不接收滑鼠事件 */
+    position: fixed; /* 改為固定位置 */
     top: 0;
     left: 0;
     outline: none;
@@ -185,45 +192,16 @@ nav.header .a:hover ~ .cursor {
     margin: 0;
     padding: 0;
     background: #000;
-    background: radial-gradient(circle at center center,#171717 0,#050505 58%);
-}
-
-#canvas-container-details{
-    pointer-events: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    outline: none;
-    z-index: 0;
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    pointer-events: all;
-    overflow: hidden;
+    background: radial-gradient(circle at center center,#171717 0,#050505 58%); /* 徑向漸變背景 */
 }
 
 
-.section{
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    /* display: flex; */
-    flex-direction: column;
-    align-content: center;
-    justify-content: center;
-    align-items: flex-start;
-    position: relative;
-    padding-left: 5%;
-    padding-right: 5%;
-    z-index: 1;
-    width: 65%;
-    height: 100vh;
-    pointer-events: none;
-}
 
 
+
+/* ========================================
+   頁面標題樣式
+   ======================================== */
 .header {
     position: absolute;
     top: -2em;
@@ -235,7 +213,7 @@ nav.header .a:hover ~ .cursor {
     font-family: 'Josefin Sans', sans-serif;
     z-index: 2;
     opacity: 0;
-    transition: all 1.9s ease-in-out ;
+    transition: all 1.9s ease-in-out ; /* 長過渡動畫 */
     padding: 0;
     margin: 0;
 
@@ -259,6 +237,7 @@ nav.header .a:hover ~ .cursor {
     transform: translate3d(-50%,0,0);
 }
 
+/* 活動標籤的下劃線 */
 .header>span.active:after {
     content: "";
     bottom: -10px;
@@ -267,6 +246,9 @@ nav.header .a:hover ~ .cursor {
     background: #fff;
 }
 
+/* ========================================
+   首頁區塊樣式
+   ======================================== */
 .first {
     pointer-events: none;
     font-size: 2em;
@@ -274,9 +256,9 @@ nav.header .a:hover ~ .cursor {
     text-align: center;
     width: 100%;
     display: flex;
-    height: 120vh;
+    height: 100vh; /* 固定為視窗高度 */
     align-content: center;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
     flex-direction: column;
 
@@ -286,8 +268,6 @@ nav.header .a:hover ~ .cursor {
 	user-select: none;
 	position: relative;
 	z-index: 1;
-    background: linear-gradient(0deg, rgba(5,5,5,1) 20%, rgba(5,5,5,0) 50%);
-
 }
 
 .first>h2 {
@@ -298,14 +278,18 @@ nav.header .a:hover ~ .cursor {
     font-style: italic;
     margin: 35px;
 }
-.first>h1{
+.first>h1 {
+    font-family: 'Orbitron', 'Josefin Sans', 'DM Serif Display', 'Nanum Myeongjo', serif;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #fff;
     margin: 10px 0;
+    font-size: 4vw;
     font-weight: 100;
-
-    letter-spacing: 0.4em;
-
 }
 
+/* 標題下方的裝飾線 */
 .first>h1:after {
     content: "";
     position: absolute;
@@ -316,221 +300,181 @@ nav.header .a:hover ~ .cursor {
     background: #ffffff70;
 }
 
-.first>p{
-    font-size: 13px;
-    letter-spacing: 0px;
-    font-family: sans-serif;
-    width: 700px;
-    line-height: 28px;
-    font-weight: lighter;
-    margin-top: 50px;
-    margin-bottom: 100px;
-    color: #c9c9c996;
-    opacity: 0;
-    transition: all 3.9s ease-in-out ;
-}
-
-.first>p.ended{
-    opacity: 1;
-}
-
-.second{
-    pointer-events: all;
-    font-size: 2em;
-    width: 100%;
-    display: flex;
-    height: 100vh;
-    background: #141414;
-    z-index: 1;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-.second-container{
-    pointer-events: all;
-    width: 100%;
-    display: flex;
-    height: 100vh;
-    margin: 0;
-    padding: 0 10%;
-    flex-direction: column;
-    justify-content: center;
-    z-index: 2;
-    background: radial-gradient(circle at 90% center, rgba(5,5,5,0) 30%, #141414 70%);
-
-}
-
-.second-container>ul{
-    list-style: none;
-    display: inline-flex;
-    padding: 0px;
-    margin: 0px 0px 30px 60px;
-    font-family: 'DM Serif Display', serif;
-    color:#ffffff1c;
-    z-index: 2;
-}
-
-.second-container>ul>li.active:after {
-    content: "";
-    top: 20px;
-    width: 50px;
-    height: 2px;
-    background: #fff;
-    position: relative;
-    left: 0px;
-    display: block;
-}
-
-
-.second-container>ul>li{
-    padding-right: 20px;
-    transition: all 0.8s ease-out;
-}
-
-.second-container>ul>li:hover{
-    color:whitesmoke;
-    pointer-events: all;
-    cursor: pointer;
-}
-
-.second-container>ul>li:hover ~ nav.header.ended.cursor{
-    transform: translate(-50%, -50%) scale(5); opacity: 1; 
-}
-
-.second-container>ul>li.active{
-    color:whitesmoke;
-}
-
-.second-container>p{
-    font-size: 14px;
-    font-family: sans-serif;
-    line-height: 24px;
-    width: 30%;
-    color: #898989;
-    margin-left: 60px;
-    height: 200px;
-}
-
-.third{
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-    display: flex;
-    flex-direction: column;
-    align-content: center;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-}
-
-.third>h1{
-    font-size: 15vw;
-    font-weight: 100;
-    letter-spacing: -6px;
-    color:whitesmoke;
-    margin: 40px 0;
-    padding: 0;
-}
-
-.third>p{
-    column-count: 2;
-    column-gap: 40px;
-    width: 80%;
-    font-size: 13px;
-    font-family: sans-serif;
-    font-weight: 100;
-    line-height: 28px;
-    height: 180px;
-    color: #898989;
-}
-
-.footer{
-    border: none;
-    width: 100%;
-    margin-bottom: 40px;
-    opacity: 1;
-    font-family: sans-serif;
-    font-size: 7px;
-    transition: all 0.8s ease-out 1.1s;
-    bottom: 0;
-    color: antiquewhite;
-    font-weight: 100;
-    opacity: 0.2;
+/* ========================================
+   信箱輸入區域樣式（縮小版）
+   ======================================== */
+.email-section {
+    margin-top: 36px;
     text-align: center;
-}
-
-.footer a{
-    text-decoration: none;
     pointer-events: auto;
-    color: antiquewhite;
 }
 
+.email-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.email-input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 22px;
+    padding: 2px 6px;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.email-input-group:hover,
+.email-input-group:focus-within {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+.email-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.85em;
+    padding: 7px 10px;
+    min-width: 160px;
+    max-width: 200px;
+    letter-spacing: 0.05em;
+}
+
+.email-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    font-size: 0.85em;
+}
+
+.email-submit {
+    background: linear-gradient(90deg, rgba(80,180,255,0.18) 0%, rgba(255,255,255,0.10) 100%);
+    border: 1.5px solid rgba(80,180,255,0.32);
+    border-radius: 22px;
+    color: #fff;
+    font-family: 'Orbitron', 'Josefin Sans', sans-serif;
+    font-size: 0.92em;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 6px 22px 6px 22px;
+    min-width: 0;
+    width: auto;
+    height: 36px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
+    box-shadow: 0 2px 8px 0 rgba(80,180,255,0.08);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.email-submit:hover, .email-submit:focus {
+    background: linear-gradient(90deg, rgba(80,180,255,0.28) 0%, rgba(255,255,255,0.18) 100%);
+    border-color: rgba(80,180,255,0.55);
+    box-shadow: 0 0 16px 2px rgba(80,180,255,0.22), 0 2px 8px 0 rgba(80,180,255,0.10);
+    transform: translateY(-1.5px) scale(1.04);
+    outline: none;
+}
+
+.email-submit:active {
+    transform: scale(0.98);
+    box-shadow: 0 0 8px 1px rgba(80,180,255,0.12);
+}
+
+.email-message {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 0.75em;
+    font-weight: 100;
+    letter-spacing: 0.08em;
+    min-height: 18px;
+    transition: all 0.3s ease;
+}
+
+.email-message.success {
+    color: #4CAF50;
+}
+
+.email-message.error {
+    color: #f44336;
+}
+
+.email-message.info {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+
+
+
+
+
+
+/* ========================================
+   響應式設計 - 移動端適配
+   ======================================== */
 @media only screen and (max-width: 660px) {
-
-    .a{
-        padding: 10px;
-        margin-right: 0rem;
-        letter-spacing: 0.3em;
-    }
-
-    .footer{
-        margin-bottom: 20px;
-    }
-    .header>span{
-        padding: 0 1em;
-    }
 
     .header{
         font-size: .6em;
-    }
-
-    .main-section .product-display h3{
-        width: 260px;
-        font-size: 42px;
-        margin-left: 30px;
-        line-height: 45px;
     }
 
     .first>h1{
         margin: 10px 0;
         font-weight: 100;
         letter-spacing: 0.2em;
-        font-size: 13vw;
+        font-size: 13vw; /* 響應式字體大小 */
     }
 
-    .first>p{
-        width: 85%;
-        line-height: 22px;
+    .email-input-group {
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 8px;
     }
+    .email-input {
+        min-width: 120px;
+        max-width: 100%;
+        text-align: center;
+        font-size: 0.95em;
+    }
+    .email-submit {
+        width: 100%;
+        max-width: 120px;
+        font-size: 0.95em;
+    }
+}
 
-    .second-container {
-        padding: 0;
-        justify-content: flex-end;
-    }
+/* ========================================
+   完全禁止滾動的額外樣式
+   ======================================== */
+html {
+    overflow: hidden !important;
+    height: 100vh !important;
+    position: fixed !important;
+    width: 100% !important;
+}
 
-    .second-container>ul {
-        margin: 0px 0px 30px 30px;
-        width: 80%;
-    }
+* {
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
 
-    .second-container>ul>li {
-        padding-right: 20px;
-        transition: all 0.8s ease-out;
-        font-size: 20px;
-    }
+*::-webkit-scrollbar {
+    display: none;
+}
 
-    .second-container>p {
-        width: 85%;
-        margin-left: 30px;
-        line-height: 21px;
-        margin-bottom: 40px;
-    }
-
-    .third>p {
-        column-count: 1;
-    }
+.main-container {
+    overflow: hidden !important;
+    height: 100vh !important;
+    position: fixed !important;
+    width: 100% !important;
+    top: 0 !important;
+    left: 0 !important;
 }

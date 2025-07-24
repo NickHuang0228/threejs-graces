@@ -1,274 +1,387 @@
 /////////////////////////////////////////////////////////////////////////
-///// IMPORT
+///// 導入模組
 import './main.css'
-import { Clock, Scene, LoadingManager, WebGLRenderer, sRGBEncoding, Group, PerspectiveCamera, DirectionalLight, PointLight, MeshPhongMaterial } from 'three'
+// 導入 Three.js 核心模組
+import { Clock, Scene, LoadingManager, WebGLRenderer, sRGBEncoding, Group, PerspectiveCamera, DirectionalLight, PointLight, MeshPhongMaterial, AnimationMixer, LoopRepeat, NumberKeyframeTrack, AnimationClip } from 'three'
+// 導入 TWEEN.js 用於動畫
 import { TWEEN } from 'three/examples/jsm/libs/tween.module.min.js'
+// 導入 DRACO 解碼器用於載入壓縮的 3D 模型
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+// 導入 GLTF 載入器用於載入 3D 模型
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+// 導入嘴巴動畫系統
+import { MouthAnimationSystem } from './mouthAnimation.js'
 
 /////////////////////////////////////////////////////////////////////////
-//// LOADING MANAGER
+//// 載入管理器設置
+// 獲取載入動畫元素
 const ftsLoader = document.querySelector(".lds-roller")
+// 獲取載入文字覆蓋層
 const looadingCover = document.getElementById("loading-text-intro")
+// 創建載入管理器來處理資源載入
 const loadingManager = new LoadingManager()
 
+// 當所有資源載入完成時的回調函數
 loadingManager.onLoad = function() {
-
+    // 顯示主容器
     document.querySelector(".main-container").style.visibility = 'visible'
+    // 恢復頁面滾動
     document.querySelector("body").style.overflow = 'auto'
 
+    // 創建載入覆蓋層的淡出動畫
     const yPosition = {y: 0}
     
+    // 使用 TWEEN 創建向上移動的動畫，持續 900ms
     new TWEEN.Tween(yPosition).to({y: 100}, 900).easing(TWEEN.Easing.Quadratic.InOut).start()
-    .onUpdate(function(){ looadingCover.style.setProperty('transform', `translate( 0, ${yPosition.y}%)`)})
-    .onComplete(function () {looadingCover.parentNode.removeChild(document.getElementById("loading-text-intro")); TWEEN.remove(this)})
+    .onUpdate(function(){ 
+        // 更新覆蓋層位置
+        looadingCover.style.setProperty('transform', `translate( 0, ${yPosition.y}%)`)
+    })
+    .onComplete(function () {
+        // 動畫完成後移除覆蓋層並清理 TWEEN
+        looadingCover.parentNode.removeChild(document.getElementById("loading-text-intro")); 
+        TWEEN.remove(this)
+    })
 
+    // 開始介紹動畫
     introAnimation()
+    // 移除載入動畫元素
     ftsLoader.parentNode.removeChild(ftsLoader)
 
+    // 滾動到頁面頂部
     window.scroll(0, 0)
-
 }
 
 /////////////////////////////////////////////////////////////////////////
-//// DRACO LOADER TO LOAD DRACO COMPRESSED MODELS FROM BLENDER
+//// DRACO 載入器設置 - 用於載入從 Blender 壓縮的模型
 const dracoLoader = new DRACOLoader()
+// 設置 DRACO 解碼器路徑
 dracoLoader.setDecoderPath('/draco/')
+// 設置解碼器配置為 JavaScript 模式
 dracoLoader.setDecoderConfig({ type: 'js' })
+// 創建 GLTF 載入器並設置 DRACO 載入器
 const loader = new GLTFLoader(loadingManager)
 loader.setDRACOLoader(dracoLoader)
 
 /////////////////////////////////////////////////////////////////////////
-///// DIV CONTAINER CREATION TO HOLD THREEJS EXPERIENCE
+///// 創建容器來容納 Three.js 體驗
+// 主畫布容器
 const container = document.getElementById('canvas-container')
-const containerDetails = document.getElementById('canvas-container-details')
 
 /////////////////////////////////////////////////////////////////////////
-///// GENERAL VARIABLES
-let oldMaterial
-let secondContainer = false
-let width = container.clientWidth
-let height = container.clientHeight
+///// 全局變數
+let oldMaterial // 儲存原始材質
+let width = container.clientWidth // 容器寬度
+let height = container.clientHeight // 容器高度
+
+// 動畫相關變數
+let mouthAnimationSystem // 嘴巴動畫系統
+let currentGoddess = 'aglaea' // 當前選中的女神
 
 /////////////////////////////////////////////////////////////////////////
-///// SCENE CREATION
+///// 場景創建
 const scene = new Scene()
 
 /////////////////////////////////////////////////////////////////////////
-///// RENDERER CONFIG
-const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance"})
-renderer.autoClear = true
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1))
-renderer.setSize( width, height)
-renderer.outputEncoding = sRGBEncoding
-container.appendChild(renderer.domElement)
+///// 渲染器配置
+// 主渲染器 - 用於背景 3D 場景
+const renderer = new WebGLRenderer({ 
+    antialias: true, // 抗鋸齒
+    alpha: true, // 透明背景
+    powerPreference: "high-performance" // 高性能模式
+})
+renderer.autoClear = true // 自動清除
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1)) // 設置像素比
+renderer.setSize( width, height) // 設置尺寸
+renderer.outputEncoding = sRGBEncoding // 設置輸出編碼
+container.appendChild(renderer.domElement) // 添加到容器
 
-const renderer2 = new WebGLRenderer({ antialias: false})
-renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 1))
-renderer2.setSize( width, height)
-renderer2.outputEncoding = sRGBEncoding
-containerDetails.appendChild(renderer2.domElement)
+
 
 /////////////////////////////////////////////////////////////////////////
-///// CAMERAS CONFIG
+///// 相機配置
+// 相機群組 - 用於視差效果
 const cameraGroup = new Group()
 scene.add(cameraGroup)
 
+// 主相機 - 用於背景場景
 const camera = new PerspectiveCamera(35, width / height, 1, 100)
 camera.position.set(19,1.54,-0.1)
 cameraGroup.add(camera)
 
-const camera2 = new PerspectiveCamera(35, containerDetails.clientWidth / containerDetails.clientHeight, 1, 100)
-camera2.position.set(1.9,2.7,2.7)
-camera2.rotation.set(0,1.1,0)
-scene.add(camera2)
+
 
 /////////////////////////////////////////////////////////////////////////
-///// MAKE EXPERIENCE FULL SCREEN
+///// 響應式設計 - 處理視窗大小變化
 window.addEventListener('resize', () => {
+    // 更新主相機寬高比
     camera.aspect = container.clientWidth / container.clientHeight
     camera.updateProjectionMatrix()
-    
-    camera2.aspect = containerDetails.clientWidth / containerDetails.clientHeight
-    camera2.updateProjectionMatrix()
 
+    // 更新渲染器尺寸
     renderer.setSize(container.clientWidth, container.clientHeight)
-    renderer2.setSize(containerDetails.clientWidth, containerDetails.clientHeight)
 
+    // 更新像素比
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1))
-    renderer2.setPixelRatio(Math.min(window.devicePixelRatio, 1))
 })
 
 /////////////////////////////////////////////////////////////////////////
-///// SCENE LIGHTS
+///// 場景燈光設置
+// 太陽光 - 方向光，提供主要照明
 const sunLight = new DirectionalLight(0x435c72, 0.08)
 sunLight.position.set(-100,0,-100)
 scene.add(sunLight)
 
+// 填充光 - 點光源，提供局部照明
 const fillLight = new PointLight(0x88b2d9, 2.7, 4, 3)
 fillLight.position.set(30,3,1.8)
 scene.add(fillLight)
 
 /////////////////////////////////////////////////////////////////////////
-///// LOADING GLB/GLTF MODEL FROM BLENDER
+///// 載入 GLB/GLTF 模型
 loader.load('models/gltf/graces-draco2.glb', function (gltf) {
-
+    // 遍歷模型中的所有網格
     gltf.scene.traverse((obj) => {
         if (obj.isMesh) {
+            // 儲存原始材質
             oldMaterial = obj.material
+            // 替換為新的 Phong 材質，增加光澤度
             obj.material = new MeshPhongMaterial({
                 shininess: 45 
             })
         }
     })
+    
+    // 將模型添加到場景
     scene.add(gltf.scene)
+    
+    // 初始化嘴巴動畫系統
+    mouthAnimationSystem = new MouthAnimationSystem()
+    mouthAnimationSystem.initAnimationSystem(gltf)
+    
+    // 清理場景
     clearScene()
 })
 
+// 清理函數 - 釋放記憶體
 function clearScene(){
-    oldMaterial.dispose()
-    renderer.renderLists.dispose()
+    oldMaterial.dispose() // 釋放原始材質
+    renderer.renderLists.dispose() // 釋放渲染列表
 }
 
+
+
 /////////////////////////////////////////////////////////////////////////
-//// INTRO CAMERA ANIMATION USING TWEEN
+//// 介紹動畫 - 使用 TWEEN 實現相機動畫
 function introAnimation() {
+    // 創建相機從初始位置到目標位置的動畫
     new TWEEN.Tween(camera.position.set(0,4,2.7)).to({ x: 0, y: 2.4, z: 8.8}, 3500).easing(TWEEN.Easing.Quadratic.InOut).start()
     .onComplete(function () {
+        // 動畫完成後清理 TWEEN 並添加 CSS 類
         TWEEN.remove(this)
         document.querySelector('.header').classList.add('ended')
-        document.querySelector('.first>p').classList.add('ended')
-    })
-    
-}
-
-//////////////////////////////////////////////////
-//// CLICK LISTENERS
-document.getElementById('aglaea').addEventListener('click', () => {
-    document.getElementById('aglaea').classList.add('active')
-    document.getElementById('euphre').classList.remove('active')
-    document.getElementById('thalia').classList.remove('active')
-    document.getElementById('content').innerHTML = 'She was venerated as the goddess of beauty, splendor, glory, magnificence, and adornment. She is the youngest of the Charites according to Hesiod. Aglaea is one of three daughters of Zeus and either the Oceanid Eurynome, or of Eunomia, the goddess of good order and lawful conduct.'
-    animateCamera({ x: 1.9, y: 2.7, z: 2.7 },{ y: 1.1 })
-})
-
-document.getElementById('thalia').addEventListener('click', () => {
-    document.getElementById('thalia').classList.add('active')
-    document.getElementById('aglaea').classList.remove('active')
-    document.getElementById('euphre').classList.remove('active')
-    document.getElementById('content').innerHTML = 'Thalia, in Greek religion, one of the nine Muses, patron of comedy; also, according to the Greek poet Hesiod, a Grace (one of a group of goddesses of fertility). She is the mother of the Corybantes, celebrants of the Great Mother of the Gods, Cybele, the father being Apollo, a god related to music and dance. In her hands she carried the comic mask and the shepherd’s staff.'
-    animateCamera({ x: -0.9, y: 3.1, z: 2.6 },{ y: -0.1 })
-})
-
-document.getElementById('euphre').addEventListener('click', () => {
-    document.getElementById('euphre').classList.add('active')
-    document.getElementById('aglaea').classList.remove('active')
-    document.getElementById('thalia').classList.remove('active')
-    document.getElementById('content').innerHTML = 'Euphrosyne is a Goddess of Good Cheer, Joy and Mirth. Her name is the female version of a Greek word euphrosynos, which means "merriment". The Greek poet Pindar states that these goddesses were created to fill the world with pleasant moments and good will. Usually the Charites attended the goddess of beauty Aphrodite.'
-    animateCamera({ x: -0.4, y: 2.7, z: 1.9 },{ y: -0.6 })
-})
-
-/////////////////////////////////////////////////////////////////////////
-//// ANIMATE CAMERA
-function animateCamera(position, rotation){
-    new TWEEN.Tween(camera2.position).to(position, 1800).easing(TWEEN.Easing.Quadratic.InOut).start()
-    .onComplete(function () {
-        TWEEN.remove(this)
-    })
-    new TWEEN.Tween(camera2.rotation).to(rotation, 1800).easing(TWEEN.Easing.Quadratic.InOut).start()
-    .onComplete(function () {
-        TWEEN.remove(this)
+        
+        // 開始嘴巴動畫
+        if (mouthAnimationSystem) {
+            mouthAnimationSystem.controlMouthAnimation('start')
+        }
     })
 }
 
-/////////////////////////////////////////////////////////////////////////
-//// PARALLAX CONFIG
-const cursor = {x:0, y:0}
-const clock = new Clock()
-let previousTime = 0
+
 
 /////////////////////////////////////////////////////////////////////////
-//// RENDER LOOP FUNCTION
+//// 視差效果配置
+const cursor = {x:0, y:0} // 滑鼠位置
+const clock = new Clock() // 時鐘用於計算時間差
+let previousTime = 0 // 前一幀時間
 
+/////////////////////////////////////////////////////////////////////////
+//// 渲染循環函數 - 主要的動畫循環
 function rendeLoop() {
-
+    // 更新 TWEEN 動畫
     TWEEN.update()
-
-    if (secondContainer){
-        renderer2.render(scene, camera2)
-    } else{
-        renderer.render(scene, camera)
+    
+    // 更新動畫混合器
+    if (mouthAnimationSystem) {
+        const deltaTime = clock.getDelta()
+        mouthAnimationSystem.update(deltaTime)
     }
 
+    // 渲染場景
+    renderer.render(scene, camera)
+
+    // 計算時間差
     const elapsedTime = clock.getElapsedTime()
     const deltaTime = elapsedTime - previousTime
     previousTime = elapsedTime
 
+    // 視差效果 - 燈光位置跟隨滑鼠移動
     const parallaxY = cursor.y
     fillLight.position.y -= ( parallaxY *9 + fillLight.position.y -2) * deltaTime
 
     const parallaxX = cursor.x
     fillLight.position.x += (parallaxX *8 - fillLight.position.x) * 2 * deltaTime
 
+    // 視差效果 - 相機群組位置跟隨滑鼠移動
     cameraGroup.position.z -= (parallaxY/3 + cameraGroup.position.z) * 2 * deltaTime
     cameraGroup.position.x += (parallaxX/3 - cameraGroup.position.x) * 2 * deltaTime
 
+    // 請求下一幀
     requestAnimationFrame(rendeLoop)
 }
 
+// 開始渲染循環
 rendeLoop()
 
 //////////////////////////////////////////////////
-//// ON MOUSE MOVE TO GET CAMERA POSITION
+//// 滑鼠移動事件 - 獲取滑鼠位置用於視差效果
 document.addEventListener('mousemove', (event) => {
     event.preventDefault()
 
+    // 計算標準化的滑鼠位置 (-0.5 到 0.5)
     cursor.x = event.clientX / window.innerWidth -0.5
     cursor.y = event.clientY / window.innerHeight -0.5
 
+    // 處理自定義游標
     handleCursor(event)
 }, false)
 
-//////////////////////////////////////////////////
-//// DISABLE RENDERER BASED ON CONTAINER VIEW
-const watchedSection = document.querySelector('.second')
 
-function obCallback(payload) {
-    if (payload[0].intersectionRatio > 0.05){
-        secondContainer = true
-    }else{
-        secondContainer = false
-    }
-}
-
-const ob = new IntersectionObserver(obCallback, {
-    threshold: 0.05
-})
-
-ob.observe(watchedSection)
 
 //////////////////////////////////////////////////
-//// MAGNETIC MENU
-const btn = document.querySelectorAll('nav > .a')
+//// 自定義游標跟隨 - 簡化版（無按鈕）
 const customCursor = document.querySelector('.cursor')
 
-function update(e) {
-    const span = this.querySelector('span')
-    
-    if(e.type === 'mouseleave') {
-        span.style.cssText = ''
-    } else {
-        const { offsetX: x, offsetY: y } = e,{ offsetWidth: width, offsetHeight: height } = this,
-        walk = 20, xWalk = (x / width) * (walk * 2) - walk, yWalk = (y / height) * (walk * 2) - walk
-        span.style.cssText = `transform: translate(${xWalk}px, ${yWalk}px);`
-    }
-}
-
+// 處理自定義游標位置
 const handleCursor = (e) => {
     const x = e.clientX
     const y =  e.clientY
     customCursor.style.cssText =`left: ${x}px; top: ${y}px;`
 }
 
-btn.forEach(b => b.addEventListener('mousemove', update))
-btn.forEach(b => b.addEventListener('mouseleave', update))
+document.addEventListener('mousemove', handleCursor)
+
+/////////////////////////////////////////////////////////////////////////
+//// 禁止滾輪事件
+document.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+}, { passive: false });
+
+document.addEventListener('touchmove', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+}, { passive: false });
+
+document.addEventListener('keydown', (event) => {
+    // 禁止方向鍵和 Page Up/Down 滾動
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', 'Space'].includes(event.key)) {
+        event.preventDefault();
+        return false;
+    }
+});
+
+/////////////////////////////////////////////////////////////////////////
+//// 信箱驗證和提交功能
+const emailForm = document.getElementById('email-form')
+const emailInput = document.getElementById('email-input')
+const emailMessage = document.getElementById('email-message')
+
+// 驗證信箱格式
+function validateEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@ilitek\.com$/
+    return emailRegex.test(email)
+}
+
+// 顯示訊息
+function showMessage(message, type = 'info') {
+    emailMessage.textContent = message
+    emailMessage.className = `email-message ${type}`
+    
+    // 3秒後自動清除訊息
+    setTimeout(() => {
+        emailMessage.textContent = ''
+        emailMessage.className = 'email-message'
+    }, 3000)
+}
+
+// 處理表單提交
+emailForm.addEventListener('submit', (e) => {
+    e.preventDefault()
+    
+    const email = emailInput.value.trim()
+    
+    if (!email) {
+        showMessage('請輸入信箱地址', 'error')
+        return
+    }
+    
+    if (!validateEmail(email)) {
+        showMessage('請輸入有效的 @ilitek.com 信箱', 'error')
+        return
+    }
+    
+    // 模擬提交過程
+    showMessage('正在處理...', 'info')
+    
+    // 模擬 API 調用
+    setTimeout(() => {
+        showMessage('訂閱成功！感謝您的加入', 'success')
+        emailInput.value = ''
+    }, 1500)
+})
+
+// 即時驗證
+emailInput.addEventListener('input', (e) => {
+    const email = e.target.value.trim()
+    
+    if (email && !validateEmail(email)) {
+        emailInput.style.borderColor = 'rgba(244, 67, 54, 0.5)'
+    } else {
+        emailInput.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+    }
+})
+
+/////////////////////////////////////////////////////////////////////////
+//// 鍵盤控制 - 用於測試嘴巴動畫
+document.addEventListener('keydown', (event) => {
+    if (!mouthAnimationSystem) return
+    
+    switch(event.key) {
+        case '1':
+            mouthAnimationSystem.controlMouthAnimation('start')
+            console.log('按鍵 1: 開始嘴巴動畫')
+            break
+        case '2':
+            mouthAnimationSystem.controlMouthAnimation('stop')
+            console.log('按鍵 2: 停止嘴巴動畫')
+            break
+        case '3':
+            mouthAnimationSystem.controlMouthAnimation('pause')
+            console.log('按鍵 3: 暫停嘴巴動畫')
+            break
+        case '4':
+            mouthAnimationSystem.controlMouthAnimation('resume')
+            console.log('按鍵 4: 恢復嘴巴動畫')
+            break
+        case '5':
+            mouthAnimationSystem.controlMouthAnimation('setSpeed', { speed: 0.5 })
+            console.log('按鍵 5: 設置慢速動畫')
+            break
+        case '6':
+            mouthAnimationSystem.controlMouthAnimation('setSpeed', { speed: 2.0 })
+            console.log('按鍵 6: 設置快速動畫')
+            break
+        case '7':
+            mouthAnimationSystem.controlMouthAnimation('setIntensity', { intensity: 0.5 })
+            console.log('按鍵 7: 設置低強度動畫')
+            break
+        case '8':
+            mouthAnimationSystem.controlMouthAnimation('setIntensity', { intensity: 1.0 })
+            console.log('按鍵 8: 設置高強度動畫')
+            break
+    }
+})
