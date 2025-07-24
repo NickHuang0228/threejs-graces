@@ -12,6 +12,107 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 // 導入嘴巴動畫系統
 import { MouthAnimationSystem } from './mouthAnimation.js'
 
+// --- 粒子波浪網格背景 ---
+import { BufferGeometry, BufferAttribute, Points, PointsMaterial, Color, CanvasTexture } from 'three'
+
+// 粒子波浪參數
+const GRID_WIDTH = 60
+const GRID_HEIGHT = 30
+const GRID_SEG_X = 160
+const GRID_SEG_Y = 60
+const GRID_AMPLITUDE = 1.5
+const GRID_SPEED = 1.1
+const GRID_BG_Z = -6 // 女神後方
+
+let gridPoints, gridPositions
+
+function createCircleTexture() {
+    const size = 64
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = size
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, size, size)
+    ctx.beginPath()
+    ctx.arc(size/2, size/2, size/2-2, 0, Math.PI*2)
+    ctx.closePath()
+    ctx.fillStyle = 'white'
+    ctx.shadowColor = 'white'
+    ctx.shadowBlur = 8
+    ctx.fill()
+    return new CanvasTexture(canvas)
+}
+
+// --- 修改 createGridParticles 與 updateGridParticles 讓顏色更科技感 ---
+function createGridParticles() {
+    const geometry = new BufferGeometry()
+    const positions = []
+    const colors = []
+    for (let y = 0; y < GRID_SEG_Y; y++) {
+        for (let x = 0; x < GRID_SEG_X; x++) {
+            const px = (x / (GRID_SEG_X-1) - 0.5) * GRID_WIDTH
+            const py = (y / (GRID_SEG_Y-1) - 0.5) * GRID_HEIGHT
+            const pz = 0
+            positions.push(px, py, pz)
+            // x/y 雙軸漸層 + 初始色彩
+            const tX = x / (GRID_SEG_X-1)
+            const tY = y / (GRID_SEG_Y-1)
+            // HSL: 0.58~0.75 (藍~紫~青)
+            const h = 0.58 + 0.17 * tX - 0.08 * tY
+            const s = 1.0
+            // --- 亮度調高 ---
+            const l = 0.7 + 0.22 * tY
+            const color = new Color().setHSL(h, s, l)
+            colors.push(color.r, color.g, color.b)
+        }
+    }
+    geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+    geometry.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3))
+    gridPositions = geometry.attributes.position
+    // --- 粒子更小、更亮、更科技感 ---
+    // 在 createGridParticles 內 PointsMaterial size 改為 0.12
+    const material = new PointsMaterial({
+        size: 0.12,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.92,
+        depthWrite: false,
+        alphaTest: 0.18,
+        map: createCircleTexture()
+    })
+    material.map.needsUpdate = true
+    const points = new Points(geometry, material)
+    points.position.z = GRID_BG_Z
+    points.renderOrder = -1 // 確保在背景
+    return points
+}
+
+function updateGridParticles(time) {
+    const colors = gridPoints.geometry.attributes.color
+    for (let y = 0; y < GRID_SEG_Y; y++) {
+        for (let x = 0; x < GRID_SEG_X; x++) {
+            const i = y * GRID_SEG_X + x
+            // 疊加正弦波，讓波浪有層次
+            const wave = Math.sin(time * GRID_SPEED + x * 0.22 + y * 0.5) * GRID_AMPLITUDE
+            gridPositions.setZ(i, wave)
+            // 動態色彩：根據 z 高度調整色相與亮度
+            const tX = x / (GRID_SEG_X-1)
+            const tY = y / (GRID_SEG_Y-1)
+            // 在 updateGridParticles 內 l = 0.8 + 0.18 * tY + 0.18 * Math.sin(wave + time)
+            const l = 0.8 + 0.18 * tY + 0.18 * Math.sin(wave + time)
+            // h = 0.58 + 0.20 * tX - 0.08 * tY ...
+            const h = 0.58 + 0.20 * tX - 0.08 * tY + 0.10 * Math.sin(wave + time)
+            const s = 1.0
+            // --- 亮度調高 ---
+            const color = new Color().setHSL(h, s, l)
+            colors.setX(i, color.r)
+            colors.setY(i, color.g)
+            colors.setZ(i, color.b)
+        }
+    }
+    gridPositions.needsUpdate = true
+    colors.needsUpdate = true
+}
+
 /////////////////////////////////////////////////////////////////////////
 //// 載入管理器設置
 // 獲取載入動畫元素
@@ -81,6 +182,9 @@ let currentGoddess = 'aglaea' // 當前選中的女神
 /////////////////////////////////////////////////////////////////////////
 ///// 場景創建
 const scene = new Scene()
+
+gridPoints = createGridParticles()
+scene.add(gridPoints)
 
 /////////////////////////////////////////////////////////////////////////
 ///// 渲染器配置
@@ -226,6 +330,9 @@ function rendeLoop() {
     // 視差效果 - 相機群組位置跟隨滑鼠移動
     cameraGroup.position.z -= (parallaxY/3 + cameraGroup.position.z) * 2 * deltaTime
     cameraGroup.position.x += (parallaxX/3 - cameraGroup.position.x) * 2 * deltaTime
+
+    // 更新粒子網格
+    updateGridParticles(elapsedTime)
 
     // 請求下一幀
     requestAnimationFrame(rendeLoop)
