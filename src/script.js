@@ -88,21 +88,20 @@ function createGridParticles() {
 
 function updateGridParticles(time) {
     const colors = gridPoints.geometry.attributes.color
+    // 新增：根據麥克風音量調整振幅
+    const dynamicAmplitude = GRID_AMPLITUDE + micVolume * 8
     for (let y = 0; y < GRID_SEG_Y; y++) {
         for (let x = 0; x < GRID_SEG_X; x++) {
             const i = y * GRID_SEG_X + x
             // 疊加正弦波，讓波浪有層次
-            const wave = Math.sin(time * GRID_SPEED + x * 0.22 + y * 0.5) * GRID_AMPLITUDE
+            const wave = Math.sin(time * GRID_SPEED + x * 0.22 + y * 0.5) * dynamicAmplitude
             gridPositions.setZ(i, wave)
             // 動態色彩：根據 z 高度調整色相與亮度
             const tX = x / (GRID_SEG_X-1)
             const tY = y / (GRID_SEG_Y-1)
-            // 在 updateGridParticles 內 l = 0.8 + 0.18 * tY + 0.18 * Math.sin(wave + time)
             const l = 0.8 + 0.18 * tY + 0.18 * Math.sin(wave + time)
-            // h = 0.58 + 0.20 * tX - 0.08 * tY ...
             const h = 0.58 + 0.20 * tX - 0.08 * tY + 0.10 * Math.sin(wave + time)
             const s = 1.0
-            // --- 亮度調高 ---
             const color = new Color().setHSL(h, s, l)
             colors.setX(i, color.r)
             colors.setY(i, color.g)
@@ -178,6 +177,82 @@ let height = container.clientHeight // 容器高度
 // 動畫相關變數
 let mouthAnimationSystem // 嘴巴動畫系統
 let currentGoddess = 'aglaea' // 當前選中的女神
+
+let micVolume = 0 // 預設為 0，避免報錯
+// 移除 micBtn 和 volumeCircle 相關程式碼
+// let micVolume = 0 // 新增：麥克風音量全域變數
+// let audioContext, analyser, dataArray, micStream
+// 
+// // 新增：建立音量圓圈
+// const volumeCircle = document.createElement('div')
+// volumeCircle.style.position = 'fixed'
+// volumeCircle.style.left = '32px'
+// volumeCircle.style.bottom = '32px'
+// volumeCircle.style.width = '48px'
+// volumeCircle.style.height = '48px'
+// volumeCircle.style.borderRadius = '50%'
+// volumeCircle.style.background = 'rgba(0,180,255,0.18)'
+// volumeCircle.style.border = '2.5px solid #00b4ff'
+// volumeCircle.style.pointerEvents = 'none'
+// volumeCircle.style.transition = 'transform 0.1s cubic-bezier(.4,2,.6,1)'
+// volumeCircle.style.zIndex = '9999'
+// document.body.appendChild(volumeCircle)
+// 
+// // 新增：啟用麥克風
+// async function enableMic() {
+//     try {
+//         audioContext = new (window.AudioContext || window.webkitAudioContext)()
+//         micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+//         const source = audioContext.createMediaStreamSource(micStream)
+//         analyser = audioContext.createAnalyser()
+//         analyser.fftSize = 256
+//         dataArray = new Uint8Array(analyser.frequencyBinCount)
+//         source.connect(analyser)
+//     } catch (e) {
+//         alert('無法啟用麥克風：' + e.message)
+//     }
+// }
+// 
+// // 新增：取得音量數值
+// function updateMicVolume() {
+//     if (analyser && dataArray) {
+//         analyser.getByteTimeDomainData(dataArray)
+//         // 計算音量（RMS）
+//         let sum = 0
+//         for (let i = 0; i < dataArray.length; i++) {
+//             let v = (dataArray[i] - 128) / 128
+//             sum += v * v
+//         }
+//         micVolume = Math.sqrt(sum / dataArray.length)
+//         // 音量圓圈視覺化
+//         const scale = 1 + micVolume * 6
+//         volumeCircle.style.transform = `scale(${scale})`
+//         volumeCircle.style.opacity = micVolume > 0.01 ? '1' : '0.3'
+//         // 新增：debug 印出音量數值
+//         console.log('micVolume:', micVolume)
+//     }
+// }
+// 
+// // 新增：畫面上加一個啟用麥克風的按鈕
+// const micBtn = document.createElement('button')
+// micBtn.textContent = '啟用麥克風互動'
+// micBtn.style.position = 'fixed'
+// micBtn.style.left = '32px'
+// micBtn.style.bottom = '96px'
+// micBtn.style.zIndex = '9999'
+// micBtn.style.background = '#00b4ff'
+// micBtn.style.color = '#fff'
+// micBtn.style.border = 'none'
+// micBtn.style.borderRadius = '24px'
+// micBtn.style.padding = '10px 20px'
+// micBtn.style.fontSize = '1rem'
+// micBtn.style.cursor = 'pointer'
+// micBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
+// document.body.appendChild(micBtn)
+// micBtn.addEventListener('click', () => {
+//     enableMic()
+//     micBtn.style.display = 'none'
+// })
 
 /////////////////////////////////////////////////////////////////////////
 ///// 場景創建
@@ -333,6 +408,7 @@ function rendeLoop() {
 
     // 更新粒子網格
     updateGridParticles(elapsedTime)
+    // updateMicVolume() // 已移除麥克風功能，這行要刪除
 
     // 請求下一幀
     requestAnimationFrame(rendeLoop)
